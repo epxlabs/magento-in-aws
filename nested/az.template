@@ -41,13 +41,6 @@
       "ConstraintDescription" : "must be valid InternetGateway name"
     },
  
-    "InstanceId" : {
-      "Description" : "Instance that will be NAT for VPC",
-      "Type" : "String",
-      "Default" : "",
-      "ConstraintDescription" : "must be valid InternetGateway name"
-    },
- 
     "Deploy" : {
       "Description" : "Deploy name which resources belong to",
       "Type" : "String",
@@ -95,6 +88,22 @@
       }
     },
 
+    "NATEIP" : {
+      "Type" : "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      }
+    },
+
+    "NAT" : {
+      "DependsOn" : "PublicSubnet",
+      "Type" : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "AllocationId" : { "Fn::GetAtt" : ["NATEIP", "AllocationId"]},
+        "SubnetId" : { "Ref" : "PublicSubnet"}
+      }
+    },
+
     "PrivateSubnet" : {
       "Type" : "AWS::EC2::Subnet",
       "Properties" : {
@@ -119,7 +128,7 @@
       "Properties" : {
         "RouteTableId" : { "Ref" : "PrivateRouteTable" },
         "DestinationCidrBlock" : "0.0.0.0/0",
-        "InstanceId" : { "Ref" : "InstanceId" }
+        "NatGatewayId" : { "Ref" : "NAT" }
       }
     },
 

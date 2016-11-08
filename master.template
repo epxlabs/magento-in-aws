@@ -23,7 +23,24 @@
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/vpc.template" ] ] }
       }
+    },
+
+    "AZLayer01" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn" : [ "VPCLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "PublicSubnetRange" : "10.0.0.0/24",
+          "PrivateSubnetRange" : "10.0.1.0/24",
+          "SubnetAZ" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },
+          "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
+      }
     }
+
   }
 }
 
