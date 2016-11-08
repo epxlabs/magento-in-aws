@@ -1,0 +1,96 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+ 
+  "Description" : "AWS CloudFormation: creates a VPC with default Security Group with attached Internet Gateway and internal Hosted Zone.",
+ 
+  "Parameters" : {
+ 
+    "VPCInternalDomainName" : {
+      "Description" : "Domain name for this VPC",
+      "Type" : "String",
+      "AllowedPattern" : "^((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}$",
+      "ConstraintDescription" : "must be a valid domain name. Ex: mylab.int"
+    },
+ 
+    "VPCSubnet" : {
+      "Description" : "The IP address range that can be used as VPC Subnet",
+      "Type" : "String",
+      "MinLength" : "9",
+      "MaxLength" : "18",
+      "AllowedPattern" : "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be valid IP CIDR range of the form x.x.x.x/x. Ex. 172.29.68.0/22"
+    },
+ 
+    "Deploy" : {
+      "Description" : "Deploy name which resources belong to",
+      "Type" : "String",
+      "ConstraintDescription" : "A literal string"
+    }
+ 
+  },
+ 
+  "Resources" : {
+ 
+    "VPC" : {
+      "Type" : "AWS::EC2::VPC",
+      "Properties" : {
+        "EnableDnsSupport" : "true",
+        "EnableDnsHostnames" : "true",
+        "CidrBlock" : { "Ref" : "VPCSubnet" },
+        "Tags" : [
+          { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }
+        ]
+      }
+    },
+ 
+    "InternetGateway" : {
+      "Type" : "AWS::EC2::InternetGateway",
+      "Properties" : {
+        "Tags" : [
+          { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } },
+          { "Key" : "Name", "Value" : "PublicGateway" }
+        ]
+      }
+    },
+ 
+    "GatewayToInternet" : {
+       "DependsOn" : ["VPC", "InternetGateway"],
+       "Type" : "AWS::EC2::VPCGatewayAttachment",
+       "Properties" : {
+         "VpcId" : { "Ref" : "VPC" },
+         "InternetGatewayId" : { "Ref" : "InternetGateway" }
+       }
+    },
+ 
+    "InternalHostedZone": {
+      "Type": "AWS::Route53::HostedZone",
+      "Properties": {
+        "HostedZoneConfig": {
+          "Comment": "Internal domain"
+        },
+        "Name": { "Ref" : "VPCInternalDomainName" },
+        "VPCs": [{
+          "VPCId" : { "Ref" : "VPC" },
+          "VPCRegion": { "Ref" : "AWS::Region" }
+        }],
+        "HostedZoneTags" : [{ "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }]
+      }
+    }
+ 
+  },
+ 
+  "Outputs" : {
+    "VPC" : {
+      "Value" : { "Ref" : "VPC" }
+    },
+    "InternetGateway" : {
+      "Value" : { "Ref" : "InternetGateway" }
+    },
+    "InternalHostedZone" : {
+      "Value" : { "Ref" : "InternalHostedZone" }
+    },
+    "DefaultSecurityGroup" : {
+      "Value" : { "Fn::GetAtt" : ["VPC", "DefaultSecurityGroup"] }
+    }
+  }
+}

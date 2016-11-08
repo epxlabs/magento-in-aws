@@ -1,0 +1,29 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation: creates full Magento Setup with Autoscaling group, ELB, Cloudfront and so on",
+
+  "Parameters" : {
+    "TemplatesBucket" : {
+      "Type" : "String",
+      "Default" : "https://s3-us-west-2.amazonaws.com/epxlabs-magento-templates",
+      "Description" : "Path to bucket with templates for setup",
+      "ConstraintDescription" : "must be valid path to bucket with templates. Ex. https://s3-us-west-2.amazonaws.com/epxlabs-magento-templates"
+    }
+  },
+
+  "Resources" : {
+    "VPCLayer01" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPCSubnet" : "10.0.0.0/16",
+          "VPCInternalDomainName" : "lab.int"
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/vpc.template" ] ] }
+      }
+    }
+  }
+}
+
