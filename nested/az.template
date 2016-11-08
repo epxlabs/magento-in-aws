@@ -1,0 +1,156 @@
+ {
+  "AWSTemplateFormatVersion" : "2010-09-09",
+ 
+  "Description" : "AWS CloudFormation: creates a public and private networks with NAT",
+ 
+  "Parameters" : {
+ 
+    "VPC" : {
+      "Description" : "VPC ID where EC2 instance should be created",
+      "Type" : "AWS::EC2::VPC::Id",
+      "ConstraintDescription" : "must be valid VPC id"
+    },
+ 
+    "PublicSubnetRange" : {
+      "Description" : "The IP address range that can be used as VPC Subnet",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be valid IP CIDR range of the form x.x.x.x/x. Ex. 10.0.0.0/24"
+    },
+
+    "PrivateSubnetRange" : {
+      "Description" : "The IP address range that can be used as VPC Subnet",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription" : "must be valid IP CIDR range of the form x.x.x.x/x. Ex. 10.0.1.0/24"
+    },
+ 
+    "SubnetAZ" : {
+      "Description": "Availability Zone of the Subnet",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+ 
+    "InternetGateway" : {
+      "Description" : "InternetGateway connected to this VPC",
+      "Type" : "String",
+      "Default" : "",
+      "ConstraintDescription" : "must be valid InternetGateway name"
+    },
+ 
+    "InstanceId" : {
+      "Description" : "Instance that will be NAT for VPC",
+      "Type" : "String",
+      "Default" : "",
+      "ConstraintDescription" : "must be valid InternetGateway name"
+    },
+ 
+    "Deploy" : {
+      "Description" : "Deploy name which resources belong to",
+      "Type" : "String",
+      "ConstraintDescription" : "A literal string"
+    }
+ 
+  },
+ 
+  "Resources" : {
+ 
+    "PublicSubnet" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Ref" : "PublicSubnetRange" },
+        "AvailabilityZone" : { "Ref" : "SubnetAZ" },
+        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
+      }
+    },
+ 
+    "PublicRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
+      }
+    },
+ 
+    "PublicRoute" : {
+      "DependsOn" : [ "PublicRouteTable" ],
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PublicRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "GatewayId" : { "Ref" : "InternetGateway" }
+      }
+    },
+ 
+    "PublicSubnetRouteTableAssociation" : {
+      "DependsOn" : [ "PublicSubnet", "PublicRouteTable" ],
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PublicSubnet" },
+        "RouteTableId" : { "Ref" : "PublicRouteTable" }
+      }
+    },
+
+    "PrivateSubnet" : {
+      "Type" : "AWS::EC2::Subnet",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "CidrBlock" : { "Ref" : "PrivateSubnetRange" },
+        "AvailabilityZone" : { "Ref" : "SubnetAZ" },
+        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
+      }
+    },
+
+    "PrivateRouteTable" : {
+      "Type" : "AWS::EC2::RouteTable",
+      "Properties" : {
+        "VpcId" : { "Ref" : "VPC" },
+        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
+      }
+    },
+
+    "PrivateRoute" : {
+      "DependsOn" : [ "PrivateRouteTable" ],
+      "Type" : "AWS::EC2::Route",
+      "Properties" : {
+        "RouteTableId" : { "Ref" : "PrivateRouteTable" },
+        "DestinationCidrBlock" : "0.0.0.0/0",
+        "InstanceId" : { "Ref" : "InstanceId" }
+      }
+    },
+
+    "PrivateSubnetRouteTableAssociation" : {
+      "DependsOn" : [ "PrivateSubnet", "PrivateRouteTable" ],
+      "Type" : "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties" : {
+        "SubnetId" : { "Ref" : "PrivateSubnet" },
+        "RouteTableId" : { "Ref" : "PrivateRouteTable" }
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "PublicSubnet" : {
+      "Description" : "The subnet ID to use for NAT and other public servers",
+      "Value" :  { "Ref" : "PublicSubnet" }
+    },
+    "PublicRouteTable" : {
+      "Description" : "The public route table id",
+      "Value" :  { "Ref" : "PublicRouteTable" }
+    },
+    "PrivateSubnet" : {
+      "Description" : "The subnet ID to use for frontend servers",
+      "Value" :  { "Ref" : "PrivateSubnet" }
+    },
+    "PrivateRouteTable" : {
+      "Description" : "The private route table id",
+      "Value" :  { "Ref" : "PrivateRouteTable" }
+    }
+  }
+
+}
