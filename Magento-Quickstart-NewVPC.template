@@ -214,49 +214,70 @@
     }
   },
 
-  "Outputs": {
-    "NATInstance0": {
-      "Description": "NAT InstanceID 0",
-      "Value": { "Ref": "NATInstance0" }
+  "Mappings": {
+    "DomainNameMapping": {
+      "eu-central-1": { "NAME": "eu-central-1.compute.internal" },
+      "sa-east-1": { "NAME": "sa-east-1.compute.internal" },
+      "ap-northeast-1": { "NAME": "ap-northeast-1.compute.internal" },
+      "ap-northeast-2": { "NAME": "ap-northeast-2.compute.internal" },
+      "eu-west-1": { "NAME": "eu-west-1.compute.internal" },
+      "us-east-1": { "NAME": "ec2.internal" },
+      "us-west-1": { "NAME": "us-west-1.compute.internal" },
+      "us-west-2": { "NAME": "us-west-2.compute.internal" },
+      "ap-southeast-2": { "NAME": "ap-southeast-2.compute.internal" },
+      "ap-southeast-1": { "NAME": "ap-southeast-1.compute.internal" },
+      "ap-south-1": { "NAME": "ap-south-1.compute.internal" }
     },
-    "NATInstance1": {
-      "Description": "NAT InstanceID 1",
-      "Value": { "Ref": "NATInstance1" }
+    "AWSInstanceType2Arch": {
+      "t2.micro": { "Arch": "HVM64" },
+      "t2.small": { "Arch": "HVM64" },
+      "t2.medium": { "Arch": "HVM64" },
+      "m3.medium": { "Arch": "HVM64" },
+      "m3.large": { "Arch": "HVM64" },
+      "m3.xlarge": { "Arch": "HVM64" },
+      "m3.2xlarge": { "Arch": "HVM64" },
+      "c3.large": { "Arch": "HVM64" },
+      "c3.xlarge": { "Arch": "HVM64" },
+      "c3.2xlarge": { "Arch": "HVM64" },
+      "c3.4xlarge": { "Arch": "HVM64" },
+      "c3.8xlarge": { "Arch": "HVM64" },
+      "c4.large": { "Arch": "HVM64" },
+      "c4.xlarge": { "Arch": "HVM64" },
+      "c4.2xlarge": { "Arch": "HVM64" },
+      "c4.4xlarge": { "Arch": "HVM64" },
+      "c4.8xlarge": { "Arch": "HVM64" },
+      "g2.2xlarge": { "Arch": "HVMG2" },
+      "r3.large": { "Arch": "HVM64" },
+      "r3.xlarge": { "Arch": "HVM64" },
+      "r3.2xlarge": { "Arch": "HVM64" },
+      "r3.4xlarge": { "Arch": "HVM64" },
+      "r3.8xlarge": { "Arch": "HVM64" },
+      "i2.xlarge": { "Arch": "HVM64" },
+      "i2.2xlarge": { "Arch": "HVM64" },
+      "i2.4xlarge": { "Arch": "HVM64" },
+      "i2.8xlarge": { "Arch": "HVM64" },
+      "d2.xlarge": { "Arch": "HVM64" },
+      "d2.2xlarge": { "Arch": "HVM64" },
+      "d2.4xlarge": { "Arch": "HVM64" },
+      "d2.8xlarge": { "Arch": "HVM64" },
+      "hi1.4xlarge": { "Arch": "HVM64" },
+      "hs1.8xlarge": { "Arch": "HVM64" },
+      "cr1.8xlarge": { "Arch": "HVM64" },
+      "cc2.8xlarge": { "Arch": "HVM64" }
     },
-    "NATInstance2": {
-      "Condition": "MoreThan3AZ",
-      "Description": "NAT InstanceID 2",
-      "Value": { "Ref": "NATInstance2" }
-    },
-    "VPC": {
-      "Description": "VPC-ID of the newly created VPC",
-      "Value": { "Ref": "VPC" }
-    },
-    "PublicSubnet0": {
-      "Description": "Subnet-ID of the Public Subnet0",
-      "Value": { "Ref": "PublicSubnet0" }
-    },
-    "PublicSubnet1": {
-      "Description": "Subnet-ID of the Public Subnet1",
-      "Value": { "Ref": "PublicSubnet1" }
-    },
-    "PublicSubnet2": {
-      "Condition": "MoreThan3AZ",
-      "Description": "Subnet-ID of the Public Subnet2",
-      "Value": { "Ref": "PublicSubnet2" }
-    },
-    "PrivateSubnet0": {
-      "Value": { "Ref": "PrivateSubnet0" },
-      "Description": "Subnet-ID of the PrivateSubnet0"
-    },
-    "PrivateSubnet1": {
-      "Value": { "Ref": "PrivateSubnet1" },
-      "Description": "Subnet-ID of the PrivateSubnet1"
-    },
-    "PrivateSubnet2": {
-      "Condition": "MoreThan3AZ",
-      "Value": { "Ref": "PrivateSubnet2" },
-      "Description": "Subnet-ID of the PrivateSubnet2"
+    "AWSAMIRegionMap": {
+      "AMI": { "AWSNAT": "amzn-ami-vpc-nat-hvm-2016.03.3.x86_64-ebs" },
+      "ap-northeast-1": { "AWSNAT": "ami-2443b745" },
+      "ap-northeast-2": { "AWSNAT": "ami-d14388bf" },
+      "ap-south-1": { "AWSNAT": "ami-e2b9d38d" },
+      "ap-southeast-1": { "AWSNAT": "ami-a79b49c4" },
+      "ap-southeast-2": { "AWSNAT": "ami-53371f30" },
+      "eu-central-1": { "AWSNAT": "ami-5825cd37" },
+      "eu-west-1": { "AWSNAT": "ami-a8dd45db" },
+      "sa-east-1": { "AWSNAT": "ami-9336bcff" },
+      "us-east-1": { "AWSNAT": "ami-4868ab25" },
+      "us-west-1": { "AWSNAT": "ami-004b0f60" },
+      "us-west-2": { "AWSNAT": "ami-a275b1c2" }
     }
   },
 
@@ -1343,70 +1364,49 @@
     }
   },
 
-  "Mappings": {
-    "DomainNameMapping": {
-      "eu-central-1": { "NAME": "eu-central-1.compute.internal" },
-      "sa-east-1": { "NAME": "sa-east-1.compute.internal" },
-      "ap-northeast-1": { "NAME": "ap-northeast-1.compute.internal" },
-      "ap-northeast-2": { "NAME": "ap-northeast-2.compute.internal" },
-      "eu-west-1": { "NAME": "eu-west-1.compute.internal" },
-      "us-east-1": { "NAME": "ec2.internal" },
-      "us-west-1": { "NAME": "us-west-1.compute.internal" },
-      "us-west-2": { "NAME": "us-west-2.compute.internal" },
-      "ap-southeast-2": { "NAME": "ap-southeast-2.compute.internal" },
-      "ap-southeast-1": { "NAME": "ap-southeast-1.compute.internal" },
-      "ap-south-1": { "NAME": "ap-south-1.compute.internal" }
+  "Outputs": {
+    "NATInstance0": {
+      "Description": "NAT InstanceID 0",
+      "Value": { "Ref": "NATInstance0" }
     },
-    "AWSInstanceType2Arch": {
-      "t2.micro": { "Arch": "HVM64" },
-      "t2.small": { "Arch": "HVM64" },
-      "t2.medium": { "Arch": "HVM64" },
-      "m3.medium": { "Arch": "HVM64" },
-      "m3.large": { "Arch": "HVM64" },
-      "m3.xlarge": { "Arch": "HVM64" },
-      "m3.2xlarge": { "Arch": "HVM64" },
-      "c3.large": { "Arch": "HVM64" },
-      "c3.xlarge": { "Arch": "HVM64" },
-      "c3.2xlarge": { "Arch": "HVM64" },
-      "c3.4xlarge": { "Arch": "HVM64" },
-      "c3.8xlarge": { "Arch": "HVM64" },
-      "c4.large": { "Arch": "HVM64" },
-      "c4.xlarge": { "Arch": "HVM64" },
-      "c4.2xlarge": { "Arch": "HVM64" },
-      "c4.4xlarge": { "Arch": "HVM64" },
-      "c4.8xlarge": { "Arch": "HVM64" },
-      "g2.2xlarge": { "Arch": "HVMG2" },
-      "r3.large": { "Arch": "HVM64" },
-      "r3.xlarge": { "Arch": "HVM64" },
-      "r3.2xlarge": { "Arch": "HVM64" },
-      "r3.4xlarge": { "Arch": "HVM64" },
-      "r3.8xlarge": { "Arch": "HVM64" },
-      "i2.xlarge": { "Arch": "HVM64" },
-      "i2.2xlarge": { "Arch": "HVM64" },
-      "i2.4xlarge": { "Arch": "HVM64" },
-      "i2.8xlarge": { "Arch": "HVM64" },
-      "d2.xlarge": { "Arch": "HVM64" },
-      "d2.2xlarge": { "Arch": "HVM64" },
-      "d2.4xlarge": { "Arch": "HVM64" },
-      "d2.8xlarge": { "Arch": "HVM64" },
-      "hi1.4xlarge": { "Arch": "HVM64" },
-      "hs1.8xlarge": { "Arch": "HVM64" },
-      "cr1.8xlarge": { "Arch": "HVM64" },
-      "cc2.8xlarge": { "Arch": "HVM64" }
+    "NATInstance1": {
+      "Description": "NAT InstanceID 1",
+      "Value": { "Ref": "NATInstance1" }
     },
-    "AWSAMIRegionMap": {
-      "AMI": { "AWSNAT": "amzn-ami-vpc-nat-hvm-2016.03.3.x86_64-ebs" },
-      "ap-northeast-1": { "AWSNAT": "ami-2443b745" },
-      "ap-northeast-2": { "AWSNAT": "ami-d14388bf" },
-      "ap-south-1": { "AWSNAT": "ami-e2b9d38d" },
-      "ap-southeast-1": { "AWSNAT": "ami-a79b49c4" },
-      "ap-southeast-2": { "AWSNAT": "ami-53371f30" },
-      "eu-central-1": { "AWSNAT": "ami-5825cd37" },
-      "eu-west-1": { "AWSNAT": "ami-a8dd45db" },
-      "sa-east-1": { "AWSNAT": "ami-9336bcff" },
-      "us-east-1": { "AWSNAT": "ami-4868ab25" },
-      "us-west-1": { "AWSNAT": "ami-004b0f60" },
-      "us-west-2": { "AWSNAT": "ami-a275b1c2" }
+    "NATInstance2": {
+      "Condition": "MoreThan3AZ",
+      "Description": "NAT InstanceID 2",
+      "Value": { "Ref": "NATInstance2" }
+    },
+    "VPC": {
+      "Description": "VPC-ID of the newly created VPC",
+      "Value": { "Ref": "VPC" }
+    },
+    "PublicSubnet0": {
+      "Description": "Subnet-ID of the Public Subnet0",
+      "Value": { "Ref": "PublicSubnet0" }
+    },
+    "PublicSubnet1": {
+      "Description": "Subnet-ID of the Public Subnet1",
+      "Value": { "Ref": "PublicSubnet1" }
+    },
+    "PublicSubnet2": {
+      "Condition": "MoreThan3AZ",
+      "Description": "Subnet-ID of the Public Subnet2",
+      "Value": { "Ref": "PublicSubnet2" }
+    },
+    "PrivateSubnet0": {
+      "Value": { "Ref": "PrivateSubnet0" },
+      "Description": "Subnet-ID of the PrivateSubnet0"
+    },
+    "PrivateSubnet1": {
+      "Value": { "Ref": "PrivateSubnet1" },
+      "Description": "Subnet-ID of the PrivateSubnet1"
+    },
+    "PrivateSubnet2": {
+      "Condition": "MoreThan3AZ",
+      "Value": { "Ref": "PrivateSubnet2" },
+      "Description": "Subnet-ID of the PrivateSubnet2"
     }
   }
 }
