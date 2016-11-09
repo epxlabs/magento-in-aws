@@ -9,7 +9,23 @@
       "Default" : "https://s3-us-west-2.amazonaws.com/epxlabs-magento-templates",
       "Description" : "Path to bucket with templates for setup",
       "ConstraintDescription" : "must be valid path to bucket with templates. Ex. https://s3-us-west-2.amazonaws.com/epxlabs-magento-templates"
+    },
+
+    "AZCount" : {
+      "Description": "The number of availability zones to use for frontend servers",
+      "Default": "1",
+      "Type": "String",
+      "AllowedValues": [ "1", "2", "3", "4", "5" ],
+      "ConstraintDescription" : "must be valid value <= availability zones in region. Ex. 3"
     }
+  },
+
+  "Conditions": {
+    "AZCorrect": { "Fn::Not" : [ { "Fn::Equals": [ { "Fn::Select" : [ { "Ref" : "AZCount" }, { "Fn::GetAZs" : "" } ] }, "" ] } ] },
+    "AZCount5": { "Fn::Equals" : [ { "Ref" : "AZCount" }, "5" ] },
+    "AZCount4": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "4" ] }, { "Condition" : "AZCount5" } ] },
+    "AZCount3": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "3" ] }, { "Condition" : "AZCount4" } ] },
+    "AZCount2": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "2" ] }, { "Condition" : "AZCount3" } ] }
   },
 
   "Resources" : {
@@ -35,6 +51,23 @@
           "PublicSubnetRange" : "10.0.0.0/24",
           "PrivateSubnetRange" : "10.0.1.0/24",
           "SubnetAZ" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },
+          "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
+      }
+    },
+
+    "AZLayer02" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Condition" : "AZCount2",
+      "DependsOn" : [ "VPCLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "PublicSubnetRange" : "10.0.2.0/24",
+          "PrivateSubnetRange" : "10.0.3.0/24",
+          "SubnetAZ" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },
           "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
