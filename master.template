@@ -17,6 +17,13 @@
       "Type": "String",
       "AllowedValues": [ "1", "2", "3", "4", "5" ],
       "ConstraintDescription" : "must be valid value <= availability zones in region. Ex. 3. Try to check https://github.com/jsonmaur/aws-regions"
+    },
+
+    "Subnet2oct" : {
+      "Description": "2 first octets of VPC Subnet",
+      "Default": "10.0",
+      "Type": "String",
+      "ConstraintDescription" : "must be x.y Ex. 10.0"
     }
   },
 
@@ -33,7 +40,7 @@
       "Properties" : {
         "Parameters" : {
           "Deploy" : { "Ref" : "AWS::StackName" },
-          "VPCSubnet" : "10.0.0.0/16",
+          "VPCSubnet" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "0.0/16" ] ] },
           "VPCInternalDomainName" : "lab.int"
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/vpc.template" ] ] }
@@ -47,8 +54,8 @@
         "Parameters" : {
           "Deploy" : { "Ref" : "AWS::StackName" },
           "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
-          "PublicSubnetRange" : "10.0.0.0/24",
-          "PrivateSubnetRange" : "10.0.1.0/24",
+          "PublicSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "0.0/24" ] ] },
+          "PrivateSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "1.0/24" ] ] },
           "SubnetAZ" : { "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ] },
           "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
         },
@@ -64,14 +71,65 @@
         "Parameters" : {
           "Deploy" : { "Ref" : "AWS::StackName" },
           "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
-          "PublicSubnetRange" : "10.0.2.0/24",
-          "PrivateSubnetRange" : "10.0.3.0/24",
+          "PublicSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "2.0/24" ] ] },
+          "PrivateSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "3.0/24" ] ] },
           "SubnetAZ" : { "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ] },
           "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
       }
-    }
+    },
+
+    "AZLayer03" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Condition" : "AZCount3",
+      "DependsOn" : [ "VPCLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "PublicSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "4.0/24" ] ] },
+          "PrivateSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "5.0/24" ] ] },
+          "SubnetAZ" : { "Fn::Select" : [ "2", { "Fn::GetAZs" : "" } ] },
+          "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
+      }
+    },
+
+    "AZLayer04" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Condition" : "AZCount4",
+      "DependsOn" : [ "VPCLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "PublicSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "6.0/24" ] ] },
+          "PrivateSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "7.0/24" ] ] },
+          "SubnetAZ" : { "Fn::Select" : [ "3", { "Fn::GetAZs" : "" } ] },
+          "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
+      }
+    },
+
+    "AZLayer05" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "Condition" : "AZCount5",
+      "DependsOn" : [ "VPCLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "Deploy" : { "Ref" : "AWS::StackName" },
+          "VPC" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "PublicSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "8.0/24" ] ] },
+          "PrivateSubnetRange" : { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "9.0/24" ] ] },
+          "SubnetAZ" : { "Fn::Select" : [ "4", { "Fn::GetAZs" : "" } ] },
+          "InternetGateway" : { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.InternetGateway" ] }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/az.template" ] ] }
+      }
+    },
 
   }
 }
