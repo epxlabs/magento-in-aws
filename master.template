@@ -16,12 +16,11 @@
       "Default": "1",
       "Type": "String",
       "AllowedValues": [ "1", "2", "3", "4", "5" ],
-      "ConstraintDescription" : "must be valid value <= availability zones in region. Ex. 3"
+      "ConstraintDescription" : "must be valid value <= availability zones in region. Ex. 3. Try to check https://github.com/jsonmaur/aws-regions"
     }
   },
 
   "Conditions": {
-    "AZCorrect": { "Fn::Not" : [ { "Fn::Equals": [ { "Fn::Select" : [ { "Ref" : "AZCount" }, { "Fn::GetAZs" : "" } ] }, "" ] } ] },
     "AZCount5": { "Fn::Equals" : [ { "Ref" : "AZCount" }, "5" ] },
     "AZCount4": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "4" ] }, { "Condition" : "AZCount5" } ] },
     "AZCount3": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "3" ] }, { "Condition" : "AZCount4" } ] },
