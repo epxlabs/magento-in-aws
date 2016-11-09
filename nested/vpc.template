@@ -37,19 +37,14 @@
         "EnableDnsSupport" : "true",
         "EnableDnsHostnames" : "true",
         "CidrBlock" : { "Ref" : "VPCSubnet" },
-        "Tags" : [
-          { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }
-        ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy"} }, { "Key": "Application", "Value": "Magento" } ]
       }
     },
  
     "InternetGateway" : {
       "Type" : "AWS::EC2::InternetGateway",
       "Properties" : {
-        "Tags" : [
-          { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } },
-          { "Key" : "Name", "Value" : "PublicGateway" }
-        ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PublicGateway" } ]
       }
     },
  
@@ -73,7 +68,7 @@
           "VPCId" : { "Ref" : "VPC" },
           "VPCRegion": { "Ref" : "AWS::Region" }
         }],
-        "HostedZoneTags" : [{ "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }]
+        "HostedZoneTags" : [{ "Key" : "Name", "Value" : { "Ref" : "Deploy"} }]
       }
     }
  

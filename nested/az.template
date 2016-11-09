@@ -57,7 +57,7 @@
         "VpcId" : { "Ref" : "VPC" },
         "CidrBlock" : { "Ref" : "PublicSubnetRange" },
         "AvailabilityZone" : { "Ref" : "SubnetAZ" },
-        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
       }
     },
  
@@ -65,7 +65,7 @@
       "Type" : "AWS::EC2::RouteTable",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PublicSubnet" } ]
       }
     },
  
@@ -110,7 +110,7 @@
         "VpcId" : { "Ref" : "VPC" },
         "CidrBlock" : { "Ref" : "PrivateSubnetRange" },
         "AvailabilityZone" : { "Ref" : "SubnetAZ" },
-        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy"} }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
       }
     },
 
@@ -118,7 +118,7 @@
       "Type" : "AWS::EC2::RouteTable",
       "Properties" : {
         "VpcId" : { "Ref" : "VPC" },
-        "Tags" : [ { "Key" : "Deploy", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
+        "Tags" : [ { "Key" : "Name", "Value" : { "Ref" : "Deploy" } }, { "Key" : "Name", "Value" : "PrivateSubnet" } ]
       }
     },
 
