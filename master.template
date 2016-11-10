@@ -35,37 +35,42 @@
       "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x."
     },
 
+    "DB": {
+      "Default": "ec2",
+      "Description": "Select true/false to setup Auto Minor Version upgrade",
+      "Type": "String",
+      "AllowedValues": [ "ec2", "rds" ]
+    },
+
     "DBAllocatedStorage": {
       "Default": "16",
       "Description": "The size of the database in gigabytes (GB)",
       "Type": "Number",
       "MinValue": "5",
       "MaxValue": "4096",
-      "ConstraintDescription": "must be between 5 and 4096 GB. If Iops specified, AllocatedStorage must be at least 100 GB and with minimum Iops value of 1000"
+      "ConstraintDescription": "RDS only! must be between 5 and 4096 GB. If Iops specified, AllocatedStorage must be at least 100 GB and with minimum Iops value of 1000"
     },
     "DBAutoMinorVersionUpgrade": {
       "Default": "true",
       "Description": "Select true/false to setup Auto Minor Version upgrade",
       "Type": "String",
-      "AllowedValues": [ "true", "false" ]
+      "AllowedValues": [ "true", "false" ],
+      "ConstraintDescription": "RDS only!"
     },
     "DBBackupRetentionPeriod": {
       "Type": "String",
       "Default": "7",
-      "Description": "The number of days for which automatic DB snapshots are retained."
+      "Description": "The number of days for which automatic DB snapshots are retained.",
+      "ConstraintDescription": "RDS only!"
     },
     "DBInstanceClass": {
-      "Default": "db.m1.small",
+      "Default": "db.t2.medium",
       "Description": "The name of the compute and memory capacity class of the DB instance.",
       "Type": "String",
       "AllowedValues": [
-        "db.t1.micro",
-        "db.m1.small",
-        "db.m3.medium", "db.m3.large", "db.m3.xlarge", "db.m3.2xlarge",
+        "db.t2.micro", "db.t2.small", "db.t2.medium", "db.t2.large",
         "db.r3.large", "db.r3.xlarge", "db.r3.2xlarge", "db.r3.4xlarge", "db.r3.8xlarge",
-        "db.t2.micro", "db.t2.small", "db.t2.medium",
-        "db.m2.xlarge", "db.m2.2xlarge", "db.m2.4xlarge", "db.cr1.8xlarge",
-        "db.m1.medium", "db.m1.large", "db.m1.xlarge"
+        "db.m4.large", "db.m4.xlarge", "db.m4.2xlarge", "db.m4.4xlarge", "db.m4.10xlarge"
       ],
       "ConstraintDescription": "Must select a valid database instance type."
     },
@@ -82,7 +87,7 @@
       "Description": "DB Iops. Used only when io1 specified for the StorageType property",
       "Type": "Number",
       "AllowedValues": [ "1000", "2000", "3000", "4000", "5000", "6000", "7000", "8000", "9000", "10000" ],
-      "ConstraintDescription": "1000 Iops min and increased in 1K increments. "
+      "ConstraintDescription": "RDS only! 1000 Iops min and increased in 1K increments. "
     },
     "DBMasterUsername": {
       "Default": "admin",
@@ -105,13 +110,8 @@
       "Default": "true",
       "Description": "Specifies if the database instance is a multiple Availability Zone deployment.",
       "Type": "String",
-      "AllowedValues": [ "true", "false" ]
-    },
-    "DBPubliclyAccessible": {
-      "Default": "false",
-      "Description": "Indicates whether the database instance is an Internet-facing instance.",
-      "Type": "String",
-      "AllowedValues": [ "true", "false" ]
+      "AllowedValues": [ "true", "false" ],
+      "ConstraintDescription": "RDS only!"
     },
     "DBStorageType": {
       "Default": "gp2",
@@ -130,6 +130,13 @@
       "Default": "s3://epxlabs-magento/magento-sample-data-1.9.2.4-2016-10-11-07-38-13.tar.gz",
       "Type": "String"
     },
+
+    "NotificationEmail": {
+      "Description": "Email address to notify if there are any scaling operations [ optional]",
+      "Default": "",
+      "Type": "String"
+    },
+
     "WebServerInstanceType": {
       "Description": "WebServer EC2 instance type",
       "Type": "String",
@@ -147,11 +154,6 @@
       "ConstraintDescription": "must be a valid EC2 instance type."
     },
 
-    "NotificationEmail": {
-      "Description": "Email address to notify if there are any scaling operations [ optional]",
-      "Default": "",
-      "Type": "String"
-    },
     "WebServerMinSize": {
       "Description": "The minimum number of EC2 instances in the Auto Scaling group of WebServers.",
       "Default": "1",
@@ -192,15 +194,36 @@
       "Default": "",
       "Type": "String"
     }
+  },
 
-
+  "Mappings" : {
+    "RDSTypeToEC2" : {
+      "db.t2.micro":    { "Name" : t2.micro" },
+      "db.t2.small":    { "Name" : t2.small" },
+      "db.t2.medium":   { "Name" : t2.medium" },
+      "db.t2.large":    { "Name" : t2.large" },
+      "db.r3.large":    { "Name" : r3.large" },
+      "db.r3.xlarge":   { "Name" : r3.xlarge" },
+      "db.r3.2xlarge":  { "Name" : r3.2xlarge" },
+      "db.r3.4xlarge":  { "Name" : r3.4xlarge" },
+      "db.r3.8xlarge":  { "Name" : r3.8xlarge" },
+      "db.m4.large":    { "Name" : m4.large" },
+      "db.m4.xlarge":   { "Name" : m4.xlarge" },
+      "db.m4.2xlarge":  { "Name" : m4.2xlarge" },
+      "db.m4.4xlarge":  { "Name" : m4.4xlarge" },
+      "db.m4.10xlarge": { "Name" : m4.10xlarge" }
+    }
   },
 
   "Conditions": {
     "AZCount5": { "Fn::Equals" : [ { "Ref" : "AZCount" }, "5" ] },
     "AZCount4": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "4" ] }, { "Condition" : "AZCount5" } ] },
     "AZCount3": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "3" ] }, { "Condition" : "AZCount4" } ] },
-    "AZCount2": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "2" ] }, { "Condition" : "AZCount3" } ] }
+    "AZCount2": { "Fn::Or" : [ { "Fn::Equals" : [ { "Ref" : "AZCount" }, "2" ] }, { "Condition" : "AZCount3" } ] },
+
+    "RDSmysql": { "Fn::Equals" : [ "rds", { "Ref" : "DB" } ] },
+    "EC2mysql": { "Fn::Not" : [ "Condition" : "RDSmysql" ] }
+
   },
 
   "Resources" : {
@@ -300,7 +323,23 @@
       }
     },
 
-    "MySQLRDSSecurityGroup0": {
+    "BastionAtPublicSubnetAZLayer01" : {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn" : [ "AZLayer01" ],
+      "Properties" : {
+        "Parameters" : {
+          "EC2Subnet" : { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
+          "needPublic" : "true",
+          "needElastic" : "true",
+          "InstanceType" : "t2.small",
+          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } ],
+          "KeyPairName" : { "Ref" : "KeyName" }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2.template" ] ] }
+      }
+    },
+
+    "MySQLSecurityGroup0": {
       "Type": "AWS::EC2::SecurityGroup",
       "Properties": {
         "GroupDescription": "Allow access to MySQL Port",
@@ -309,13 +348,29 @@
       }
     },
 
+    "EC2MySQL": {
+      "Type" : "AWS::CloudFormation::Stack",
+      "DependsOn" : [ "AZLayer01" ],
+      "Condition" : "EC2mysql",
+      "Properties" : {
+        "Parameters" : {
+          "EC2Subnet" : { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
+          "InstanceType" : { "Fn::FindInMap" : [ "RDSTypeToEC2", { "Ref" : "DBInstanceClass" }, "Name" ] },
+          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } ],
+          "KeyPairName" : { "Ref" : "KeyName" }
+        },
+        "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2mysql.template" ] ] }
+      }
+    },
+
     "RDSMySQL": {
       "Type": "AWS::CloudFormation::Stack",
+      "Condition" : "RDSmysql",
       "Properties": {
         "TemplateURL": { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/rdsmysql.template" ] ] },
         "Parameters": {
           "VPC": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
-          "AutoScaledInstanceSecurityGroup": { "Ref": "MySQLRDSSecurityGroup0" },
+          "AutoScaledInstanceSecurityGroup": { "Ref": "MySQLSecurityGroup0" },
           "Subnets": { "Fn::Join": [ ",", [ { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
                                             { "Fn::If" : [ "AZCount2", { "Fn::GetAtt" : [ "AZLayer02", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
                                             { "Fn::If" : [ "AZCount3", { "Fn::GetAtt" : [ "AZLayer03", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
@@ -331,7 +386,7 @@
           "DBMasterUsername": { "Ref": "DBMasterUsername" },
           "DBMasterUserPassword": { "Ref": "DBMasterUserPassword" },
           "DBMultiAZ": { "Ref": "DBMultiAZ" },
-          "DBPubliclyAccessible": { "Ref": "DBPubliclyAccessible" },
+          "DBPubliclyAccessible": "false",
           "DBStorageType": { "Ref": "DBStorageType" }
         }
       }
@@ -366,7 +421,7 @@
         "SecurityGroupEgress": [
           { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" },
           { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0" },
-          { "IpProtocol": "tcp", "FromPort": "3306", "ToPort": "3306", "SourceSecurityGroupId": { "Ref": "MySQLRDSSecurityGroup0" } }
+          { "IpProtocol": "tcp", "FromPort": "3306", "ToPort": "3306", "SourceSecurityGroupId": { "Ref": "MySQLSecurityGroup0" } }
         ]
       }
     },
@@ -396,7 +451,7 @@
           "WebServerMinSize": { "Ref": "WebServerMinSize" },
           "DBMasterUsername": { "Ref": "DBMasterUsername" },
           "DBMasterUserPassword": { "Ref": "DBMasterUserPassword" },
-          "RDSMySQLStack": { "Ref": "RDSMySQL" },
+          "RDSMySQLStack": { "Fn::If" : [ "RDSmysql", { "Ref": "RDSMySQL" }, { "Ref": "EC2MySQL" } ] },
           "WebServerSubnets": { "Fn::Join": [ ",", [ { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PrivateSubnet" ] },
                                             { "Fn::If" : [ "AZCount2", { "Fn::GetAtt" : [ "AZLayer02", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
                                             { "Fn::If" : [ "AZCount3", { "Fn::GetAtt" : [ "AZLayer03", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },

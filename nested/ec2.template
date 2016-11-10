@@ -1,0 +1,179 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "AWS CloudFormation: could create EC2 instance with Elastic IP or Public IP in public network, or without them in private.",
+
+  "Parameters" : {
+
+    "EC2Subnet" : {
+      "Description" : "Subnet Id",
+      "Type": "AWS::EC2::Subnet::Id",
+      "ConstraintDescription" : "must be valid subnet"
+    },
+
+    "needPublic" : {
+      "Description" : "Assign public ip to instance.",
+      "Type" : "String",
+      "Default" : "false",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must choose"
+    },
+
+    "needElastic" : {
+      "Description" : "Assign Elastic ip to instance.",
+      "Type" : "String",
+      "Default" : "false",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must choose"
+    },
+
+    "needSourceDestCheck" : {
+      "Description" : "Set source check destination.",
+      "Type" : "String",
+      "Default" : "true",
+      "AllowedValues" : [ "true", "false" ],
+      "ConstraintDescription" : "must choose"
+    },
+
+    "InstanceType" : {
+      "Description" : "EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues":[ "t2.micro", "t2.small", "t2.medium", "t2.large",
+                        "m4.large", "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge",  
+                        "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge",
+                        "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge",
+                        "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge",
+                        "g2.2xlarge", "g2.8xlarge",
+                        "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge",
+                        "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge"
+                      ],
+      "ConstraintDescription" : "must be a valid EC2 instance type."
+    },
+
+    "EC2Profile" : {
+      "Description" : "Instance profile",
+      "Type" : "String",
+      "ConstraintDescription" : "must be a valid instance profile name"
+    },
+
+    "EC2SecurityGroupIds": {
+      "Description": "Security groups that can be used to access the EC2 instances",
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "ConstraintDescription": "must be list of EC2 security group ids"
+    },
+
+    "KeyPairName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type" : "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "must be the name of an existing EC2 KeyPair."
+    },
+
+    "Deploy" : {
+      "Description" : "Deploy name which resources belong to",
+      "Type" : "String",
+      "ConstraintDescription" : "A literal string"
+    }
+
+  },
+
+  "Mappings": {
+    "RegionMap": {
+        "ap-northeast-1":       { "AMI" : "ami-0c11b26d" },
+        "ap-northeast-2":       { "AMI" : "ami-983ce8f6" },
+        "ap-south-1":           { "AMI" : "ami-34b4c05b" },
+        "ap-southeast-1":       { "AMI" : "ami-b953f2da" },
+        "ap-southeast-2":       { "AMI" : "ami-db704cb8" },
+        "eu-central-1":         { "AMI" : "ami-f9619996" },
+        "eu-west-1":            { "AMI" : "ami-9398d3e0" },
+        "sa-east-1":            { "AMI" : "ami-97831ffb" },
+        "us-east-1":            { "AMI" : "ami-b73b63a0" },
+        "us-east-2":            { "AMI" : "ami-58277d3d" },
+        "us-west-1":            { "AMI" : "ami-23e8a343" },
+        "us-west-2":            { "AMI" : "ami-5ec1673e" }
+    }
+  },
+
+  "Conditions" : {
+    "assignPublic" : { "Fn::Equals" : [ { "Ref" : "needPublic" }, "true" ] },
+    "assignElastic" : { "Fn::Equals" : [ { "Ref" : "needElastic" }, "true" ] },
+    "privateInstance" : {
+      "Fn::Not" : [{
+        "Fn::Or" : [
+          { "Condition": "assignPublic" },
+          { "Condition": "assignElastic" }
+        ]
+      }]
+    },
+    "publicInstance" : {
+      "Fn::Not": [{ "Condition": "privateInstance" }]
+    },
+    "useIamInstanceProfile" : {"Fn::Not": [ {"Fn::Equals" : [{"Ref" : "EC2Profile"}, ""]} ]}
+  },
+
+  "Resources" : {
+
+    "EC2Instance" : {
+      "Type" : "AWS::EC2::Instance",
+      "Properties" : {
+        "InstanceType" : { "Ref" : "InstanceType" },
+        "KeyName"  : { "Ref" : "KeyPairName" },
+        "SourceDestCheck" : { "Ref" : "needSourceDestCheck" },
+        "IamInstanceProfile": { "Fn::If" : [ "useIamInstanceProfile", { "Ref" : "EC2Profile" }, { "Ref" : "AWS::NoValue" } ] },
+        "ImageId" : { "Fn::FindInMap" : [ "RegionMap", { "Ref" : "AWS::Region" }, "AMI" ] },
+        "NetworkInterfaces" : [{
+          "GroupSet"                 : { "Ref" : "EC2SecurityGroupIds" },
+          "AssociatePublicIpAddress" : { "Fn::If" : [ "assignPublic", "true", "false" ]},
+          "DeviceIndex"              : "0",
+          "DeleteOnTermination"      : "true",
+          "SubnetId"                 : { "Ref" : "EC2Subnet" }
+        }],
+        "Tags" : [
+          { "Key" : "Name", "Value" : { "Ref" : "Deploy" } }
+        ]
+      }
+    },
+
+    "ElasticIP": {
+      "Condition" : "assignElastic",
+      "Type": "AWS::EC2::EIP",
+      "Properties" : {
+        "Domain" : "vpc"
+      }
+    },
+
+    "EIPAssociation": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Condition" : "assignElastic",
+      "Properties": {
+        "InstanceId": {
+          "Ref": "EC2Instance"
+        },
+        "AllocationId": { "Fn::GetAtt" : [ "ElasticIP", "AllocationId" ]}
+      }
+    }
+
+  },
+
+  "Outputs" : {
+    "InstanceId": {
+      "Description" : "Instance ID",
+      "Value" :  { "Ref": "EC2Instance" }
+    },
+    "PrivateIP": {
+      "Description": "Private IP",
+      "Value" :  { "Fn::GetAtt": [ "EC2Instance", "PrivateIp" ] }
+    },
+    "PublicIP": {
+      "Description": "Public IP",
+      "Value": { "Fn::GetAtt": [ "EC2Instance", "PublicIp" ] },
+      "Condition" : "assignPublic"
+    },
+    "ElasticIP": {
+      "Description": "Elastic IP",
+      "Value": { "Ref" : "ElasticIP" },
+      "Condition" : "assignElastic"
+    }
+  }
+  
+}
