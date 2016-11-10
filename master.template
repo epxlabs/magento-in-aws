@@ -118,6 +118,79 @@
       "Description": "The storage type associated with this database instance",
       "Type": "String",
       "AllowedValues": [ "standard", "gp2", "io1" ]
+    },
+
+    "MagentoReleaseMedia": {
+      "Description": "Amazon S3 path to download magento .tar.gz file (s3://mybucket/magento-1.9.2.2.tar.gz)",
+      "Default": "s3://epxlabs-magento/magento-1.9.3.0-2016-10-11-06-05-14.tar.gz",
+      "Type": "String"
+    },
+    "MagentoSampleData": {
+      "Description": "[ optional ] Amazon S3 path to download magento sample data file ((s3://mybucket/magento-sample-data.tar.gz)",
+      "Default": "s3://epxlabs-magento/magento-sample-data-1.9.2.4-2016-10-11-07-38-13.tar.gz",
+      "Type": "String"
+    },
+    "WebServerInstanceType": {
+      "Description": "WebServer EC2 instance type",
+      "Type": "String",
+      "Default": "t2.small",
+      "AllowedValues": [
+        "t2.micro", "t2.small", "t2.medium",
+        "m3.medium", "m3.large", "m3.xlarge", "m3.2xlarge",
+        "m4.xlarge", "m4.2xlarge", "m4.4xlarge", "m4.10xlarge",
+        "c3.large", "c3.xlarge", "c3.2xlarge", "c3.4xlarge", "c3.8xlarge",
+        "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge",
+        "g2.2xlarge",
+        "r3.large", "r3.xlarge", "r3.2xlarge", "r3.4xlarge", "r3.8xlarge",
+        "i2.xlarge", "i2.2xlarge", "i2.4xlarge", "i2.8xlarge"
+      ],
+      "ConstraintDescription": "must be a valid EC2 instance type."
+    },
+
+    "NotificationEmail": {
+      "Description": "Email address to notify if there are any scaling operations [ optional]",
+      "Default": "",
+      "Type": "String"
+    },
+    "WebServerMinSize": {
+      "Description": "The minimum number of EC2 instances in the Auto Scaling group of WebServers.",
+      "Default": "1",
+      "Type": "String",
+      "AllowedValues": [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" ]
+    },
+    "WebServerMaxSize": {
+      "Description": "The maximum number of EC2 instances in the Auto Scaling group of WebServers.",
+      "Type": "String",
+      "Default": "1",
+      "AllowedValues": [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" ]
+    },
+    "WebServerDesiredCapacity": {
+      "Description": "The desired number of EC2 instances in the Auto Scaling group of WebServers before indicating CREATE_SUCCESS.",
+      "Type": "String",
+      "Default": "1",
+      "AllowedValues": [ "1", "2", "3", "4", "5", "6", "7", "8", "9", "10" ]
+    },
+    "KeyName": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Default": "",
+      "Description": "Name of an EC2 KeyPair. Your instances will launch with this KeyPair."
+    },
+
+    "BucketNamePrefix": {
+      "Description": "Name of bucket to hold magento media assets",
+      "Default": "magento",
+      "Type": "String"
+    },
+    "ExistingIamInstanceProfile": {
+      "Type": "String",
+      "Default": "",
+      "Description": "[Optional] Name or ARN of the instance profile associated with the IAM role for the WebServer instancesi (or default IAM role if epmty)"
+    },
+
+    "SSLCertificateId": {
+      "Description": "The ARN of the SSL certificate to use for the webserver. [ optional]",
+      "Default": "",
+      "Type": "String"
     }
 
 
@@ -260,6 +333,87 @@
           "DBMultiAZ": { "Ref": "DBMultiAZ" },
           "DBPubliclyAccessible": { "Ref": "DBPubliclyAccessible" },
           "DBStorageType": { "Ref": "DBStorageType" }
+        }
+      }
+    },
+
+    "ElasticLoadBalancerSecurityGroup0": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable HTTP/HTTPS access on port 80 and 443",
+        "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+        "SecurityGroupIngress": [
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0" }
+        ],
+        "SecurityGroupEgress": [
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0" }
+        ]
+      }
+    },
+
+    "AutoScaledInstanceSecurityGroup0": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable SSH access and HTTP from the load balancer only",
+        "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+        "SecurityGroupIngress": [
+          { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "SourceSecurityGroupId": { "Ref": "ElasticLoadBalancerSecurityGroup0" } },
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "SourceSecurityGroupId": { "Ref": "ElasticLoadBalancerSecurityGroup0" } }
+        ],
+        "SecurityGroupEgress": [
+          { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "3306", "ToPort": "3306", "SourceSecurityGroupId": { "Ref": "MySQLRDSSecurityGroup0" } }
+        ]
+      }
+    },
+    "AutoScaledInstanceLoopSecurityGroup0": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Enable all communications within Auto Scaled instances",
+        "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+        "SecurityGroupIngress": [ { "IpProtocol": "-1", "FromPort": "1", "ToPort": "65535", "SourceSecurityGroupId": { "Ref": "AutoScaledInstanceSecurityGroup0" } } ]
+      }
+    },
+
+    "WebServer": {
+      "Type": "AWS::CloudFormation::Stack",
+      "Properties": {
+        "TemplateURL": { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/webserver.template" ] ] },
+        "Parameters": {
+          "VPC": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+          "WebServerInstanceType": { "Ref": "WebServerInstanceType" },
+          "BucketNamePrefix": { "Ref": "BucketNamePrefix" },
+          "NotificationEmail": { "Ref": "NotificationEmail" },
+          "ElasticLoadBalancerSecurityGroup": { "Ref": "ElasticLoadBalancerSecurityGroup0" },
+          "AutoScaledInstanceSecurityGroup": { "Ref": "AutoScaledInstanceSecurityGroup0" },
+          "MagentoReleaseMedia": { "Ref": "MagentoReleaseMedia" },
+          "MagentoSampleData": { "Ref": "MagentoSampleData" },
+          "SSLCertificateId": { "Ref": "SSLCertificateId" },
+          "WebServerMinSize": { "Ref": "WebServerMinSize" },
+          "DBMasterUsername": { "Ref": "DBMasterUsername" },
+          "DBMasterUserPassword": { "Ref": "DBMasterUserPassword" },
+          "RDSMySQLStack": { "Ref": "RDSMySQL" },
+          "WebServerSubnets": { "Fn::Join": [ ",", [ { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PrivateSubnet" ] },
+                                            { "Fn::If" : [ "AZCount2", { "Fn::GetAtt" : [ "AZLayer02", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount3", { "Fn::GetAtt" : [ "AZLayer03", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount4", { "Fn::GetAtt" : [ "AZLayer04", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount5", { "Fn::GetAtt" : [ "AZLayer05", "Outputs.PrivateSubnet" ] }, {"Ref" : "AWS::NoValue"} ] }
+                                   ] ] },
+          "ElasticLoadBalancerSubnets": { "Fn::Join": [ ",", [ { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
+                                            { "Fn::If" : [ "AZCount2", { "Fn::GetAtt" : [ "AZLayer02", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount3", { "Fn::GetAtt" : [ "AZLayer03", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount4", { "Fn::GetAtt" : [ "AZLayer04", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] },
+                                            { "Fn::If" : [ "AZCount5", { "Fn::GetAtt" : [ "AZLayer05", "Outputs.PublicSubnet" ] }, {"Ref" : "AWS::NoValue"} ] }
+                                   ] ] },
+          "WebServerMaxSize": { "Ref": "WebServerMaxSize" },
+          "WebServerDesiredCapacity": { "Ref": "WebServerDesiredCapacity" },
+          "KeyName": { "Ref": "KeyName" },
+          "ExistingIamInstanceProfile": { "Ref": "ExistingIamInstanceProfile" },
+          "RemoteAccessCIDR": { "Ref": "RemoteAccessCIDR" }
         }
       }
     }
