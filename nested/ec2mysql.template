@@ -73,45 +73,33 @@
 
     "DBName": {
       "Default": "MyDatabase",
-      "Description" : "MySQL database name",
+      "Description": "Name of MySQL DB for Magento Stack",
       "Type": "String",
-      "MinLength": "1",
+      "MinLength": "5",
       "MaxLength": "64",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
-      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*"
     },
 
     "DBUser": {
-      "NoEcho": "true",
-      "Description" : "Username for MySQL database access",
+      "Default": "admin",
+      "Description": "The database admin account username",
       "Type": "String",
       "MinLength": "1",
       "MaxLength": "16",
-      "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
-      "ConstraintDescription" : "must begin with a letter and contain only alphanumeric characters."
+      "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*",
+      "ConstraintDescription": "must begin with a letter and contain only alphanumeric characters."
     },
 
     "DBPassword": {
-      "NoEcho": "true",
-      "Description" : "Password for MySQL database access",
+      "Description": "The database admin account password",
       "Type": "String",
-      "MinLength": "1",
-      "MaxLength": "41",
-      "AllowedPattern" : "[a-zA-Z0-9]*",
-      "ConstraintDescription" : "must contain only alphanumeric characters."
-    },
-
-    "DBRootPassword": {
-      "NoEcho": "true",
-      "Description" : "Root password for MySQL",
-      "Type": "String",
-      "MinLength": "1",
-      "MaxLength": "41",
-      "AllowedPattern" : "[a-zA-Z0-9]*",
-      "ConstraintDescription" : "must contain only alphanumeric characters."
-    },
-
-
+      "MinLength": "8",
+      "MaxLength": "64",
+      "AllowedPattern": "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*",
+      "NoEcho": "True",
+      "Default": "admin-12345",
+      "ConstraintDescription": "Min 8 chars."
+    }
 
   },
 
@@ -172,7 +160,7 @@
               "/tmp/setup.mysql" : {
                 "content" : { "Fn::Join" : ["", [
                   "CREATE DATABASE ", { "Ref" : "DBName" }, ";\n",
-                  "GRANT ALL ON ", { "Ref" : "DBName" }, ".* TO '", { "Ref" : "DBUser" }, "'@% IDENTIFIED BY '", { "Ref" : "DBPassword" }, "';\n"
+                  "GRANT ALL ON ", { "Ref" : "DBName" }, ".* TO '", { "Ref" : "DBUser" }, "'@'%' IDENTIFIED BY '", { "Ref" : "DBPassword" }, "';\n"
                   ]]},
                 "mode"  : "000400",
                 "owner" : "root",
@@ -193,10 +181,10 @@
                 "content": { "Fn::Join" : ["", [
                   "[cfn-auto-reloader-hook]\n",
                   "triggers=post.update\n",
-                  "path=Resources.MySQLDB.Metadata.AWS::CloudFormation::Init\n",
+                  "path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init\n",
                   "action=/opt/aws/bin/cfn-init -v ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource MySQLDB ",
+                  "         --resource EC2Instance ",
                   "         --configsets InstallAndRun ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
                   "runas=root\n"
@@ -216,12 +204,12 @@
           "Configure" : {
             "commands" : {
               "01_set_mysql_root_password" : {
-                "command" : { "Fn::Join" : ["", ["mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'"]]},
-                "test" : { "Fn::Join" : ["", ["$(mysql ", { "Ref" : "DBName" }, " -u root --password='", { "Ref" : "DBRootPassword" }, "' >/dev/null 2>&1 </dev/null); (( $? != 0 ))"]]}
+                "command" : { "Fn::Join" : ["", ["mysqladmin -u root password '", { "Ref" : "DBPassword" }, "'"]]},
+                "test" : { "Fn::Join" : ["", ["$(mysql ", { "Ref" : "DBName" }, " -u root --password='", { "Ref" : "DBPassword" }, "' >/dev/null 2>&1 </dev/null); (( $? != 0 ))"]]}
               },
               "02_create_database" : {
-                "command" : { "Fn::Join" : ["", ["mysql -u root --password='", { "Ref" : "DBRootPassword" }, "' < /tmp/setup.mysql"]]},
-                "test" : { "Fn::Join" : ["", ["$(mysql ", { "Ref" : "DBName" }, " -u root --password='", { "Ref" : "DBRootPassword" }, "' >/dev/null 2>&1 </dev/null); (( $? != 0 ))"]]}
+                "command" : { "Fn::Join" : ["", ["mysql -u root --password='", { "Ref" : "DBPassword" }, "' < /tmp/setup.mysql"]]},
+                "test" : { "Fn::Join" : ["", ["$(mysql ", { "Ref" : "DBName" }, " -u root --password='", { "Ref" : "DBPassword" }, "' >/dev/null 2>&1 </dev/null); (( $? != 0 ))"]]}
               }
             }
           }
@@ -250,14 +238,14 @@
              "# Install the files and packages from the metadata\n",
              "/opt/aws/bin/cfn-init -v ",
              "         --stack ", { "Ref" : "AWS::StackName" },
-             "         --resource MySQLDB ",
+             "         --resource EC2Instance ",
              "         --configsets InstallAndRun ",
              "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
              "# Signal the status from cfn-init\n",
              "/opt/aws/bin/cfn-signal -e $? ",
              "         --stack ", { "Ref" : "AWS::StackName" },
-             "         --resource MySQLDBInstance ",
+             "         --resource EC2Instance ",
              "         --region ", { "Ref" : "AWS::Region" }, "\n"
         ]]}}
       },

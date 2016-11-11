@@ -28,6 +28,7 @@
 
     "RemoteAccessCIDR": {
       "Description": "IP CIDR from where you could SSH to NATs",
+      "Default": "0.0.0.0/0",
       "Type": "String",
       "MinLength": "9",
       "MaxLength": "18",
@@ -323,6 +324,15 @@
       }
     },
 
+    "BastionSecurityGroup0": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Allow access to MySQL Port",
+        "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
+        "SecurityGroupIngress": [ { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": { "Ref" : "RemoteAccessCIDR" } } ]
+      }
+    },
+
     "BastionAtPublicSubnetAZLayer01" : {
       "Type" : "AWS::CloudFormation::Stack",
       "DependsOn" : [ "AZLayer01" ],
@@ -332,7 +342,7 @@
           "needPublic" : "true",
           "needElastic" : "true",
           "InstanceType" : "t2.small",
-          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } ],
+          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] }, { "Ref" : "BastionSecurityGroup0" } ],
           "KeyPairName" : { "Ref" : "KeyName" }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2.template" ] ] }
@@ -344,7 +354,10 @@
       "Properties": {
         "GroupDescription": "Allow access to MySQL Port",
         "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
-        "SecurityGroupIngress": [ { "IpProtocol": "tcp", "FromPort": "3306", "ToPort": "3306", "CidrIp": { "Fn::Join" : [ ".", [ { "Ref" : "Subnet2oct" }, "0.0/16" ] ] } } ]
+        "SecurityGroupIngress": [ 
+          { "IpProtocol": "tcp", "FromPort": "3306", "ToPort": "3306", "SourceSecurityGroupId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } },
+          { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "SourceSecurityGroupId": { "Ref" : "BastionSecurityGroup0" } }
+        ]
       }
     },
 
@@ -357,7 +370,10 @@
           "EC2Subnet" : { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
           "InstanceType" : { "Fn::FindInMap" : [ "RDSTypeToEC2", { "Ref" : "DBInstanceClass" }, "Name" ] },
           "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } ],
-          "KeyPairName" : { "Ref" : "KeyName" }
+          "KeyPairName" : { "Ref" : "KeyName" },
+          "DBName" : { "Ref": "DBName" },
+          "DBUser" : { "Ref": "DBMasterUsername" },
+          "DBPassword" : { "Ref": "DBMasterUserPassword" }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2mysql.template" ] ] }
       }
@@ -414,7 +430,7 @@
         "GroupDescription": "Enable SSH access and HTTP from the load balancer only",
         "VpcId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.VPC" ] },
         "SecurityGroupIngress": [
-          { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "CidrIp": "0.0.0.0/0" },
+          { "IpProtocol": "tcp", "FromPort": "22", "ToPort": "22", "SourceSecurityGroupId": { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } },
           { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "SourceSecurityGroupId": { "Ref": "ElasticLoadBalancerSecurityGroup0" } },
           { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "SourceSecurityGroupId": { "Ref": "ElasticLoadBalancerSecurityGroup0" } }
         ],
