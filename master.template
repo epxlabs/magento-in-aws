@@ -199,20 +199,20 @@
 
   "Mappings" : {
     "RDSTypeToEC2" : {
-      "db.t2.micro":    { "Name" : t2.micro" },
-      "db.t2.small":    { "Name" : t2.small" },
-      "db.t2.medium":   { "Name" : t2.medium" },
-      "db.t2.large":    { "Name" : t2.large" },
-      "db.r3.large":    { "Name" : r3.large" },
-      "db.r3.xlarge":   { "Name" : r3.xlarge" },
-      "db.r3.2xlarge":  { "Name" : r3.2xlarge" },
-      "db.r3.4xlarge":  { "Name" : r3.4xlarge" },
-      "db.r3.8xlarge":  { "Name" : r3.8xlarge" },
-      "db.m4.large":    { "Name" : m4.large" },
-      "db.m4.xlarge":   { "Name" : m4.xlarge" },
-      "db.m4.2xlarge":  { "Name" : m4.2xlarge" },
-      "db.m4.4xlarge":  { "Name" : m4.4xlarge" },
-      "db.m4.10xlarge": { "Name" : m4.10xlarge" }
+      "db.t2.micro":    { "Name" : "t2.micro" },
+      "db.t2.small":    { "Name" : "t2.small" },
+      "db.t2.medium":   { "Name" : "t2.medium" },
+      "db.t2.large":    { "Name" : "t2.large" },
+      "db.r3.large":    { "Name" : "r3.large" },
+      "db.r3.xlarge":   { "Name" : "r3.xlarge" },
+      "db.r3.2xlarge":  { "Name" : "r3.2xlarge" },
+      "db.r3.4xlarge":  { "Name" : "r3.4xlarge" },
+      "db.r3.8xlarge":  { "Name" : "r3.8xlarge" },
+      "db.m4.large":    { "Name" : "m4.large" },
+      "db.m4.xlarge":   { "Name" : "m4.xlarge" },
+      "db.m4.2xlarge":  { "Name" : "m4.2xlarge" },
+      "db.m4.4xlarge":  { "Name" : "m4.4xlarge" },
+      "db.m4.10xlarge": { "Name" : "m4.10xlarge" }
     }
   },
 
@@ -342,8 +342,9 @@
           "needPublic" : "true",
           "needElastic" : "true",
           "InstanceType" : "t2.small",
-          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] }, { "Ref" : "BastionSecurityGroup0" } ],
-          "KeyPairName" : { "Ref" : "KeyName" }
+          "EC2SecurityGroupIds" : { "Fn::Join" : [ ",", [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] }, { "Ref" : "BastionSecurityGroup0" } ] ] },
+          "KeyPairName" : { "Ref" : "KeyName" },
+          "Deploy" : { "Ref" : "AWS::StackName" }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2.template" ] ] }
       }
@@ -367,13 +368,14 @@
       "Condition" : "EC2mysql",
       "Properties" : {
         "Parameters" : {
-          "EC2Subnet" : { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PublicSubnet" ] },
+          "EC2Subnet" : { "Fn::GetAtt" : [ "AZLayer01", "Outputs.PrivateSubnet" ] },
           "InstanceType" : { "Fn::FindInMap" : [ "RDSTypeToEC2", { "Ref" : "DBInstanceClass" }, "Name" ] },
-          "EC2SecurityGroupIds" : [ { "Fn::GetAtt" : [ "VPCLayer01", "Outputs.DefaultSecurityGroup" ] } ],
+          "EC2SecurityGroupIds" : { "Ref" : "MySQLSecurityGroup0" },
           "KeyPairName" : { "Ref" : "KeyName" },
           "DBName" : { "Ref": "DBName" },
           "DBUser" : { "Ref": "DBMasterUsername" },
-          "DBPassword" : { "Ref": "DBMasterUserPassword" }
+          "DBPassword" : { "Ref": "DBMasterUserPassword" },
+          "Deploy" : { "Ref" : "AWS::StackName" }
         },
         "TemplateURL" : { "Fn::Join" : [ "", [ { "Ref" : "TemplatesBucket" }, "/nested/ec2mysql.template" ] ] }
       }

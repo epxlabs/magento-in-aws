@@ -54,6 +54,7 @@
     "EC2Profile" : {
       "Description" : "Instance profile",
       "Type" : "String",
+      "Default": "",
       "ConstraintDescription" : "must be a valid instance profile name"
     },
 
