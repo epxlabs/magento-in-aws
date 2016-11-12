@@ -119,6 +119,11 @@
       "Type": "String",
       "Default": "",
       "Description": "[Optional] Name or ARN of the instance profile associated with the IAM role for the WebServer instancesi (or default IAM role if epmty)"
+    },
+    "Deploy" : {
+      "Description" : "Deploy name which resources belong to",
+      "Type" : "String",
+      "ConstraintDescription" : "A literal string"
     }
   },
 
@@ -285,7 +290,7 @@
       "Type": "AWS::SNS::Topic",
       "Condition": "AllowNotificationEmail",
       "Properties": {
-        "TopicName": "MagentoWebServerAutoScaler",
+        "TopicName": { "Fn::Join": [ "-", [ "MagentoWebServerAutoScaler", { "Ref" : "Deploy" } ] ] },
         "Subscription": [ { "Endpoint": { "Ref": "NotificationEmail" }, "Protocol": "email" } ]
       }
     },

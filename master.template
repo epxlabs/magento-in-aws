@@ -485,8 +485,8 @@
           "WebServerMaxSize": { "Ref": "WebServerMaxSize" },
           "WebServerDesiredCapacity": { "Ref": "WebServerDesiredCapacity" },
           "KeyName": { "Ref": "KeyName" },
-          "ExistingIamInstanceProfile": { "Ref": "ExistingIamInstanceProfile" },
-          "RemoteAccessCIDR": { "Ref": "RemoteAccessCIDR" }
+          "Deploy": { "Ref" : "AWS::StackName" },
+          "ExistingIamInstanceProfile": { "Ref": "ExistingIamInstanceProfile" }
         }
       }
     }
