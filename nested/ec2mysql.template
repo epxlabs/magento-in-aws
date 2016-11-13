@@ -279,23 +279,21 @@
   },
 
   "Outputs" : {
-    "InstanceId": {
-      "Description" : "Instance ID",
-      "Value" :  { "Ref": "EC2Instance" }
+    "MySQLEndPoints": {
+      "Description": "MySQL Endpoint to connect",
+      "Value": { "Fn::Join": [ "", [ { "Fn::GetAtt": [ "EC2Instance", "PrivateDnsName" ] }, ":3306/", { "Ref": "DBName" } ] ] }
     },
-    "PrivateIP": {
-      "Description": "Private IP",
-      "Value" :  { "Fn::GetAtt": [ "EC2Instance", "PrivateIp" ] }
+    "DBName": {
+      "Description": "MySQL DBName",
+      "Value": { "Ref": "DBName" }
     },
-    "PublicIP": {
-      "Description": "Public IP",
-      "Value": { "Fn::GetAtt": [ "EC2Instance", "PublicIp" ] },
-      "Condition" : "assignPublic"
+    "MySQLEndPointAddress": {
+      "Description": "MySQL Endpoint to connect",
+      "Value": { "Fn::GetAtt": [ "EC2Instance", "PrivateDnsName" ] }
     },
-    "ElasticIP": {
-      "Description": "Elastic IP",
-      "Value": { "Ref" : "ElasticIP" },
-      "Condition" : "assignElastic"
+    "MySQLEndPointPort": {
+      "Description": "MySQL Endpoint to connect",
+      "Value": "3306"
     }
   }
 }

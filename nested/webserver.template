@@ -129,18 +129,18 @@
 
   "Mappings": {
     "RegionMap": {
-	"ap-northeast-1":	{ "AMI" : "ami-0c11b26d" },
-	"ap-northeast-2":	{ "AMI" : "ami-983ce8f6" },
-	"ap-south-1":		{ "AMI" : "ami-34b4c05b" },
-	"ap-southeast-1":	{ "AMI" : "ami-b953f2da" },
-	"ap-southeast-2":	{ "AMI" : "ami-db704cb8" },
-	"eu-central-1":		{ "AMI" : "ami-f9619996" },
-	"eu-west-1":		{ "AMI" : "ami-9398d3e0" },
-	"sa-east-1":		{ "AMI" : "ami-97831ffb" },
-	"us-east-1":		{ "AMI" : "ami-b73b63a0" },
-	"us-east-2":		{ "AMI" : "ami-58277d3d" },
-	"us-west-1":		{ "AMI" : "ami-23e8a343" },
-	"us-west-2":		{ "AMI" : "ami-5ec1673e" }
+      "ap-northeast-1":       { "AMI" : "ami-0c11b26d" },
+      "ap-northeast-2":       { "AMI" : "ami-983ce8f6" },
+      "ap-south-1":           { "AMI" : "ami-34b4c05b" },
+      "ap-southeast-1":       { "AMI" : "ami-b953f2da" },
+      "ap-southeast-2":       { "AMI" : "ami-db704cb8" },
+      "eu-central-1":         { "AMI" : "ami-f9619996" },
+      "eu-west-1":            { "AMI" : "ami-9398d3e0" },
+      "sa-east-1":            { "AMI" : "ami-97831ffb" },
+      "us-east-1":            { "AMI" : "ami-b73b63a0" },
+      "us-east-2":            { "AMI" : "ami-58277d3d" },
+      "us-west-1":            { "AMI" : "ami-23e8a343" },
+      "us-west-2":            { "AMI" : "ami-5ec1673e" }
     }
   },
 
@@ -297,7 +297,7 @@
     "WebServerGroup": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
       "Properties": {
-        "Tags": [ { "Key": "Name", "Value": "AutoScalerQuickstart", "PropagateAtLaunch": "true" } ],
+        "Tags": [ { "Key": "Name", "Value": { "Ref" : "Deploy" }, "PropagateAtLaunch": "true" } ],
         "LaunchConfigurationName": { "Ref": "LaunchConfig" },
         "MinSize": { "Ref": "WebServerMinSize" },
         "MaxSize": { "Ref": "WebServerMaxSize" },
@@ -341,21 +341,22 @@
                 "mode": "000644",
                 "owner": "root",
                 "group": "root"
-              },
-              "/etc/cfn/cfn-hup.conf": {
-                "content": { "Fn::Join": [ "", [ "[main]\n", "stack=", { "Ref": "AWS::StackId" }, "\n",
-                                           "region=", { "Ref": "AWS::Region" }, "\n" ] ] },
-                "mode": "000400",
-                "owner": "root",
-                "group": "root"
-              },
-              "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
-                "content": { "Fn::Join": [ "", [ "[cfn-auto-reloader-hook]\n",
-                                           "triggers=post.update\n",
-                                           "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
-                                           "action=/opt/aws/bin/cfn-init -v ", " --stack ", { "Ref": "AWS::StackName" },
-                                           " --resource LaunchConfig ", " --region ", { "Ref": "AWS::Region" }, "\n",
-                                           "runas=root\n" ] ] }
+              }
+            },
+            "/etc/cfn/cfn-hup.conf": {
+              "content": { "Fn::Join": [ "", [ "[main]\n", "stack=", { "Ref": "AWS::StackId" }, "\n",
+                                         "region=", { "Ref": "AWS::Region" }, "\n" ] ] },
+              "mode": "000400",
+              "owner": "root",
+              "group": "root"
+            },
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+              "content": { "Fn::Join": [ "", [ "[cfn-auto-reloader-hook]\n",
+                                         "triggers=post.update\n",
+                                         "path=Resources.LaunchConfig.Metadata.AWS::CloudFormation::Init\n",
+                                         "action=/opt/aws/bin/cfn-init -v ", " --stack ", { "Ref": "AWS::StackName" },
+                                         " --resource LaunchConfig ", " --region ", { "Ref": "AWS::Region" }, "\n",
+                                         "runas=root\n" ] ]
               }
             }
           },
